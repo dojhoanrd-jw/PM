@@ -39,6 +39,20 @@ functions:
           path: /auth/login
           method: POST
 
+  createProject:
+    handler: src/projects/handler.create
+    events:
+      - httpApi:
+          path: /projects
+          method: POST
+
+  listProjects:
+    handler: src/projects/handler.list
+    events:
+      - httpApi:
+          path: /projects
+          method: GET
+
 plugins:
   - serverless-offline
 
