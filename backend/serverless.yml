@@ -1,0 +1,48 @@
+service: project-manager-api
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  environment:
+    DYNAMODB_TABLE: AppData
+    JWT_SECRET: ${env:JWT_SECRET, 'clave-secreta-provisional'}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:Query
+          Resource: 
+            - "arn:aws:dynamodb:${aws:region}:*:table/AppData"
+
+functions:
+  login:
+    handler: src/handlers/auth.login
+    events:
+      - httpApi:
+          path: /auth/login
+          method: POST
+
+plugins:
+  - serverless-offline
+
+resources:
+  Resources:
+    AppDataTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: AppData
+        AttributeDefinitions:
+          - AttributeName: PK
+            AttributeType: S
+          - AttributeName: SK
+            AttributeType: S
+        KeySchema:
+          - AttributeName: PK
+            KeyType: HASH
+          - AttributeName: SK
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
