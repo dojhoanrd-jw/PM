@@ -1,10 +1,10 @@
 const { GetCommand } = require('@aws-sdk/lib-dynamodb');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { docClient, TABLE_NAME } = require('../lib/dynamo');
-const { success, error } = require('../lib/response');
-const { AppError } = require('../lib/errors');
-const { loginSchema } = require('../validators/auth');
+const { docClient, TABLE_NAME } = require('../shared/dynamo');
+const { success, error } = require('../shared/response');
+const { AppError } = require('../shared/errors');
+const { loginSchema } = require('./validator');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = '24h';

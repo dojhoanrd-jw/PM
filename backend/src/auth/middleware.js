@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { error } = require('../lib/response');
+const { error } = require('../shared/response');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 

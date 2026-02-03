@@ -33,7 +33,7 @@ provider:
 
 functions:
   login:
-    handler: src/handlers/auth.login
+    handler: src/auth/handler.login
     events:
       - httpApi:
           path: /auth/login
