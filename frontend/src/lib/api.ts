@@ -218,7 +218,7 @@ export const api = {
     ),
 
   getTasks: () =>
-    request('/tasks', { headers: buildHeaders() }),
+    request<{ tasks: Task[] }>('/tasks?limit=100', { headers: buildHeaders() }),
 
   getMyTasks: () =>
     request('/tasks/me', { headers: buildHeaders() }),

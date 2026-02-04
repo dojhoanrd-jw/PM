@@ -60,7 +60,7 @@ export default function ProjectTasks({ projectId, tasks, onTaskChanged }: Projec
     });
   }, [tasks, statusFilter, priorityFilter]);
 
-  const selectClasses = 'rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none transition-colors focus:border-accent cursor-pointer';
+  const selectClasses = 'rounded-lg border border-border bg-white px-3 py-2 text-sm text-text-primary outline-none transition-colors focus:border-accent cursor-pointer';
 
   return (
     <>
