@@ -84,6 +84,14 @@
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+
+  /* Animations */
+  --animate-slide-in: slide-in 0.2s ease-out;
+}
+
+@keyframes slide-in {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
 }
 
 body {

@@ -9,7 +9,7 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Promage - Project Manager",
+  title: "PM",
   description: "Project management dashboard",
 };
 
