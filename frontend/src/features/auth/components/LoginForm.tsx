@@ -3,18 +3,19 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { ApiError, NetworkError } from '@/lib/errors';
+import { useAlerts } from '@/context/AlertContext';
 import { Button, Input, Card } from '@/components/ui';
 
 export default function LoginForm() {
   const router = useRouter();
+  const { showError } = useAlerts();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     try {
@@ -23,7 +24,13 @@ export default function LoginForm() {
       localStorage.setItem('user', JSON.stringify(data.user));
       router.push('/dashboard');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      if (err instanceof NetworkError) {
+        showError('No connection. Check your internet.');
+      } else if (err instanceof ApiError) {
+        showError(err.message);
+      } else {
+        showError('Unexpected error while signing in');
+      }
     } finally {
       setLoading(false);
     }
@@ -61,12 +68,6 @@ export default function LoginForm() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-
-        {error && (
-          <p className="rounded-lg bg-status-delayed-bg px-3 py-2 text-sm text-status-delayed">
-            {error}
-          </p>
-        )}
 
         <Button type="submit" isLoading={loading} className="mt-2 w-full">
           {loading ? 'Signing in...' : 'Sign in'}

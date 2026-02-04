@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import { AlertProvider } from "@/context/AlertContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -20,7 +21,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} font-sans antialiased`}>
-        {children}
+        <AlertProvider>
+          {children}
+        </AlertProvider>
       </body>
     </html>
   );

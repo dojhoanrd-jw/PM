@@ -1,11 +1,13 @@
+import { ApiError, NetworkError } from './errors';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
-const getToken = () => {
+const getToken = (): string | null => {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem('token');
 };
 
-const headers = (withAuth = true) => {
+const buildHeaders = (withAuth = true): Record<string, string> => {
   const h: Record<string, string> = { 'Content-Type': 'application/json' };
   if (withAuth) {
     const token = getToken();
@@ -14,32 +16,71 @@ const headers = (withAuth = true) => {
   return h;
 };
 
-const request = async (path: string, options: RequestInit = {}) => {
-  const res = await fetch(`${API_URL}${path}`, options);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Request failed');
-  return data;
-};
+function handleUnauthorized(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  window.location.href = '/';
+}
+
+async function request<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
+  let res: Response;
+
+  try {
+    res = await fetch(`${API_URL}${path}`, options);
+  } catch {
+    throw new NetworkError();
+  }
+
+  if (res.status === 401) {
+    handleUnauthorized();
+    throw new ApiError('Session expired', 401);
+  }
+
+  let data: unknown;
+  try {
+    data = await res.json();
+  } catch {
+    if (!res.ok) throw new ApiError('Server error', res.status);
+    data = null;
+  }
+
+  if (!res.ok) {
+    const body = data as Record<string, string> | null;
+    throw new ApiError(
+      body?.error || body?.message || 'Request failed',
+      res.status,
+      body?.code,
+    );
+  }
+
+  return data as T;
+}
+
+interface LoginResponse {
+  token: string;
+  user: { id: string; name: string; email: string; role: string };
+}
 
 export const api = {
   login: (email: string, password: string) =>
-    request('/auth/login', {
+    request<LoginResponse>('/auth/login', {
       method: 'POST',
-      headers: headers(false),
+      headers: buildHeaders(false),
       body: JSON.stringify({ email, password }),
     }),
 
   getDashboard: (period = '1month') =>
     request(`/dashboard/metrics?period=${period}`, {
-      headers: headers(),
+      headers: buildHeaders(),
     }),
 
   getProjects: () =>
-    request('/projects', { headers: headers() }),
+    request('/projects', { headers: buildHeaders() }),
 
   getTasks: () =>
-    request('/tasks', { headers: headers() }),
+    request('/tasks', { headers: buildHeaders() }),
 
   getMyTasks: () =>
-    request('/tasks/me', { headers: headers() }),
+    request('/tasks/me', { headers: buildHeaders() }),
 };
