@@ -3,10 +3,24 @@ service: project-manager-api
 provider:
   name: aws
   runtime: nodejs18.x
-  region: us-east-1
+  region: us-east-2
+  httpApi:
+    cors:
+      allowedOrigins:
+        - 'https://d3rx7s4hbv9ebb.cloudfront.net'
+        - 'http://localhost:3001'
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
   environment:
-    DYNAMODB_TABLE: AppData
-    JWT_SECRET: ${env:JWT_SECRET, 'clave-secreta-provisional'}
+    DYNAMODB_TABLE: AppData-${sls:stage}
+    JWT_SECRET: ${env:JWT_SECRET}
   iam:
     role:
       statements:
@@ -14,17 +28,177 @@ provider:
           Action:
             - dynamodb:PutItem
             - dynamodb:GetItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
             - dynamodb:Query
-          Resource: 
-            - "arn:aws:dynamodb:${aws:region}:*:table/AppData"
+            - dynamodb:Scan
+            - dynamodb:BatchWriteItem
+            - dynamodb:BatchGetItem
+          Resource:
+            - "arn:aws:dynamodb:${aws:region}:*:table/AppData-${sls:stage}"
+            - "arn:aws:dynamodb:${aws:region}:*:table/AppData-${sls:stage}/index/*"
 
 functions:
   login:
-    handler: src/handlers/auth.login
+    handler: src/auth/handler.login
     events:
       - httpApi:
           path: /auth/login
           method: POST
+
+  changePassword:
+    handler: src/auth/handler.changePassword
+    events:
+      - httpApi:
+          path: /auth/change-password
+          method: PUT
+
+  listUsers:
+    handler: src/users/handler.list
+    events:
+      - httpApi:
+          path: /users
+          method: GET
+
+  createUser:
+    handler: src/users/handler.create
+    events:
+      - httpApi:
+          path: /users
+          method: POST
+
+  updateUser:
+    handler: src/users/handler.update
+    events:
+      - httpApi:
+          path: /users/{email}
+          method: PUT
+
+  deleteUser:
+    handler: src/users/handler.remove
+    events:
+      - httpApi:
+          path: /users/{email}
+          method: DELETE
+
+  createProject:
+    handler: src/projects/handler.create
+    events:
+      - httpApi:
+          path: /projects
+          method: POST
+
+  listProjects:
+    handler: src/projects/handler.list
+    events:
+      - httpApi:
+          path: /projects
+          method: GET
+
+  getProject:
+    handler: src/projects/handler.get
+    events:
+      - httpApi:
+          path: /projects/{projectId}
+          method: GET
+
+  updateProject:
+    handler: src/projects/handler.update
+    events:
+      - httpApi:
+          path: /projects/{projectId}
+          method: PUT
+
+  deleteProject:
+    handler: src/projects/handler.remove
+    events:
+      - httpApi:
+          path: /projects/{projectId}
+          method: DELETE
+
+  addProjectMember:
+    handler: src/projects/handler.addMember
+    events:
+      - httpApi:
+          path: /projects/{projectId}/members
+          method: POST
+
+  removeProjectMember:
+    handler: src/projects/handler.removeMember
+    events:
+      - httpApi:
+          path: /projects/{projectId}/members/{memberEmail}
+          method: DELETE
+
+  createTask:
+    handler: src/tasks/handler.create
+    events:
+      - httpApi:
+          path: /tasks
+          method: POST
+
+  listTasks:
+    handler: src/tasks/handler.list
+    events:
+      - httpApi:
+          path: /tasks
+          method: GET
+
+  updateTask:
+    handler: src/tasks/handler.update
+    events:
+      - httpApi:
+          path: /tasks/{taskId}
+          method: PUT
+
+  deleteTask:
+    handler: src/tasks/handler.remove
+    events:
+      - httpApi:
+          path: /tasks/{taskId}
+          method: DELETE
+
+  myTasks:
+    handler: src/tasks/handler.myTasks
+    events:
+      - httpApi:
+          path: /tasks/me
+          method: GET
+
+  dashboardOverview:
+    handler: src/dashboard/overviewHandler.overview
+    events:
+      - httpApi:
+          path: /dashboard/overview
+          method: GET
+
+  dashboardProgress:
+    handler: src/dashboard/progressHandler.progress
+    events:
+      - httpApi:
+          path: /dashboard/progress
+          method: GET
+
+  dashboardProjectsSummary:
+    handler: src/dashboard/projectsSummaryHandler.projectsSummary
+    events:
+      - httpApi:
+          path: /dashboard/projects-summary
+          method: GET
+
+  dashboardTodayTasks:
+    handler: src/dashboard/todayTasksHandler.todayTasks
+    events:
+      - httpApi:
+          path: /dashboard/today-tasks
+          method: GET
+
+  dashboardWorkload:
+    handler: src/dashboard/workloadHandler.workload
+    events:
+      - httpApi:
+          path: /dashboard/workload
+          method: GET
 
 plugins:
   - serverless-offline
@@ -34,15 +208,131 @@ resources:
     AppDataTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: AppData
+        TableName: AppData-${sls:stage}
         AttributeDefinitions:
           - AttributeName: PK
             AttributeType: S
           - AttributeName: SK
+            AttributeType: S
+          - AttributeName: GSI1PK
+            AttributeType: S
+          - AttributeName: GSI1SK
             AttributeType: S
         KeySchema:
           - AttributeName: PK
             KeyType: HASH
           - AttributeName: SK
             KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: GSI1
+            KeySchema:
+              - AttributeName: GSI1PK
+                KeyType: HASH
+              - AttributeName: GSI1SK
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
         BillingMode: PAY_PER_REQUEST
+
+    # ── S3 Bucket for frontend static hosting ──
+    FrontendBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: project-manager-frontend-jhoan-${sls:stage}
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+
+    FrontendBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref FrontendBucket
+        PolicyDocument:
+          Statement:
+            - Sid: AllowCloudFrontOAC
+              Effect: Allow
+              Principal:
+                Service: cloudfront.amazonaws.com
+              Action: s3:GetObject
+              Resource: !Sub "${FrontendBucket.Arn}/*"
+              Condition:
+                StringEquals:
+                  AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}"
+
+    # ── CloudFront Origin Access Control ──
+    FrontendOAC:
+      Type: AWS::CloudFront::OriginAccessControl
+      Properties:
+        OriginAccessControlConfig:
+          Name: project-manager-oac-${sls:stage}
+          OriginAccessControlOriginType: s3
+          SigningBehavior: always
+          SigningProtocol: sigv4
+
+    # ── CloudFront Function for SPA URL rewriting ──
+    SpaRewriteFunction:
+      Type: AWS::CloudFront::Function
+      Properties:
+        Name: spa-url-rewrite-${sls:stage}
+        AutoPublish: true
+        FunctionConfig:
+          Comment: "Rewrite SPA URLs to .html files"
+          Runtime: cloudfront-js-2.0
+        FunctionCode: |
+          function handler(event) {
+            var request = event.request;
+            var uri = request.uri;
+            if (uri === '/') return request;
+            if (uri.endsWith('/')) {
+              request.uri = uri.slice(0, -1) + '.html';
+            } else if (!uri.includes('.')) {
+              request.uri = uri + '.html';
+            }
+            return request;
+          }
+
+    # ── CloudFront Distribution ──
+    FrontendDistribution:
+      Type: AWS::CloudFront::Distribution
+      Properties:
+        DistributionConfig:
+          Enabled: true
+          DefaultRootObject: index.html
+          Origins:
+            - Id: S3Origin
+              DomainName: !GetAtt FrontendBucket.RegionalDomainName
+              OriginAccessControlId: !GetAtt FrontendOAC.Id
+              S3OriginConfig:
+                OriginAccessIdentity: ""
+          DefaultCacheBehavior:
+            TargetOriginId: S3Origin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [GET, HEAD]
+            CachedMethods: [GET, HEAD]
+            Compress: true
+            ForwardedValues:
+              QueryString: false
+            FunctionAssociations:
+              - EventType: viewer-request
+                FunctionARN: !GetAtt SpaRewriteFunction.FunctionARN
+          # SPA fallback: serve index.html for unknown routes
+          CustomErrorResponses:
+            - ErrorCode: 403
+              ResponseCode: 200
+              ResponsePagePath: /index.html
+              ErrorCachingMinTTL: 0
+            - ErrorCode: 404
+              ResponseCode: 200
+              ResponsePagePath: /index.html
+              ErrorCachingMinTTL: 0
+          PriceClass: PriceClass_100
+
+  Outputs:
+    FrontendBucketName:
+      Value: !Ref FrontendBucket
+    FrontendURL:
+      Value: !Sub "https://${FrontendDistribution.DomainName}"
+    CloudFrontDistributionId:
+      Value: !Ref FrontendDistribution
