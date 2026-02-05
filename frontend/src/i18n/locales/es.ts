@@ -112,7 +112,7 @@ const es: Record<string, string> = {
   'projects.newProject': '+ Nuevo proyecto',
   'projects.noProjectsYet': 'Aún no hay proyectos',
   'projects.noProjectsDesc': 'Crea tu primer proyecto para comenzar a gestionar tareas y progreso.',
-  'projects.createProject': '+ Crear proyecto',
+  'projects.createProject': 'Crear proyecto',
   'projects.manager': 'Gestor: {name}',
   'projects.due': 'Vence: {date}',
   'projects.taskCount': '{completed}/{total} tareas',
@@ -138,11 +138,13 @@ const es: Record<string, string> = {
   'projectDetail.noMembersDesc': 'Haz clic en "Agregar miembro" para comenzar.',
   'projectDetail.removeMember': 'Quitar miembro',
   'projectDetail.allUsersAlreadyMembers': 'Todos los usuarios ya son miembros de este proyecto.',
+  'projectDetail.notFound': 'Proyecto no encontrado',
+  'projectDetail.backToProjects': 'Volver a proyectos',
 
   // ── Página de Tareas ──
   'tasks.title': 'Tareas',
   'tasks.subtitle': 'Ver y gestionar todas las tareas de los proyectos',
-  'tasks.addTask': '+ Agregar tarea',
+  'tasks.addTask': 'Agregar tarea',
   'tasks.noTasksYet': 'Aún no hay tareas',
   'tasks.noTasksDesc': 'Crea tu primera tarea para comenzar.',
   'tasks.createTask': '+ Crear tarea',
@@ -155,7 +157,7 @@ const es: Record<string, string> = {
   // ── Página de Usuarios ──
   'users.title': 'Usuarios',
   'users.subtitle': 'Gestiona los miembros del equipo y sus roles',
-  'users.addUser': '+ Agregar usuario',
+  'users.addUser': 'Agregar usuario',
   'users.noUsersFound': 'No se encontraron usuarios',
   'users.noUsersDesc': 'Haz clic en "Agregar usuario" para crear uno.',
   'users.noUsersMatch': 'Ningún usuario coincide con el filtro seleccionado.',
