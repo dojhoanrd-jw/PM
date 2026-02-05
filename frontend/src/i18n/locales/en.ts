@@ -112,7 +112,7 @@ const en: Record<string, string> = {
   'projects.newProject': '+ New Project',
   'projects.noProjectsYet': 'No projects yet',
   'projects.noProjectsDesc': 'Create your first project to start tracking tasks and progress.',
-  'projects.createProject': '+ Create Project',
+  'projects.createProject': 'Create Project',
   'projects.manager': 'Manager: {name}',
   'projects.due': 'Due: {date}',
   'projects.taskCount': '{completed}/{total} tasks',
@@ -142,7 +142,7 @@ const en: Record<string, string> = {
   // ── Tasks Page ──
   'tasks.title': 'Tasks',
   'tasks.subtitle': 'View and manage all tasks across projects',
-  'tasks.addTask': '+ Add Task',
+  'tasks.addTask': 'Add Task',
   'tasks.noTasksYet': 'No tasks yet',
   'tasks.noTasksDesc': 'Create your first task to get started.',
   'tasks.createTask': '+ Create Task',
@@ -155,7 +155,7 @@ const en: Record<string, string> = {
   // ── Users Page ──
   'users.title': 'Users',
   'users.subtitle': 'Manage team members and their roles',
-  'users.addUser': '+ Add User',
+  'users.addUser': 'Add User',
   'users.noUsersFound': 'No users found',
   'users.noUsersDesc': 'Click "Add User" to create one.',
   'users.noUsersMatch': 'No users match the selected filter.',
