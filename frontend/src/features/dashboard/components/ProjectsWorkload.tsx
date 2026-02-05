@@ -2,7 +2,8 @@
 
 import { memo, useMemo } from 'react';
 import { ChevronDownIcon } from '@/components/icons';
-import { DASHBOARD_PERIOD_OPTIONS, PILL_SELECT_CLASSES } from '@/lib/constants';
+import { getDashboardPeriodOptions, PILL_SELECT_CLASSES } from '@/lib/constants';
+import { useTranslation } from '@/context/I18nContext';
 import type { WorkloadMember } from '../dashboard.types';
 
 interface ProjectsWorkloadProps {
@@ -18,6 +19,9 @@ function getFirstName(fullName: string) {
 }
 
 export default memo(function ProjectsWorkload({ members, period, onPeriodChange }: ProjectsWorkloadProps) {
+  const { t } = useTranslation();
+  const periodOptions = useMemo(() => getDashboardPeriodOptions(t), [t]);
+
   const { columns, maxCount } = useMemo(() => {
     const cols = members.map((m) => ({
       id: m.assigneeId,
@@ -32,8 +36,8 @@ export default memo(function ProjectsWorkload({ members, period, onPeriodChange 
   if (columns.length === 0) {
     return (
       <div className="rounded-2xl bg-surface p-5">
-        <h3 className="text-lg font-semibold text-text-primary">Projects Workload</h3>
-        <p className="mt-8 text-center text-sm text-text-secondary">No workload data available.</p>
+        <h3 className="text-lg font-semibold text-text-primary">{t('dashboard.projectsWorkload')}</h3>
+        <p className="mt-8 text-center text-sm text-text-secondary">{t('dashboard.noWorkloadData')}</p>
       </div>
     );
   }
@@ -41,14 +45,14 @@ export default memo(function ProjectsWorkload({ members, period, onPeriodChange 
   return (
     <div className="rounded-2xl bg-surface p-5">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-text-primary">Projects Workload</h3>
+        <h3 className="text-lg font-semibold text-text-primary">{t('dashboard.projectsWorkload')}</h3>
         <div className="relative">
           <select
             value={period}
             onChange={(e) => onPeriodChange(e.target.value)}
             className={PILL_SELECT_CLASSES}
           >
-            {DASHBOARD_PERIOD_OPTIONS.map((p) => (
+            {periodOptions.map((p) => (
               <option key={p.value} value={p.value}>{p.label}</option>
             ))}
           </select>

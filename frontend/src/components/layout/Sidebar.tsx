@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
+import { useTranslation } from '@/context/I18nContext';
 import {
   DashboardIcon,
   FolderIcon,
@@ -23,16 +24,9 @@ interface SidebarProps {
   onCreateProject: () => void;
 }
 
-const NAV_ITEMS = [
-  { href: '/dashboard', label: 'Dashboard', icon: <DashboardIcon /> },
-  { href: '/projects', label: 'Projects', icon: <FolderIcon /> },
-  { href: '/tasks', label: 'Tasks', icon: <TasksIcon /> },
-  { href: '/users', label: 'Users', adminOnly: true, icon: <UsersIcon /> },
-  { href: '/settings', label: 'Settings', icon: <SettingsIcon /> },
-];
-
 export default function Sidebar({ open, onClose, collapsed, onToggleCollapse, onCreateProject }: SidebarProps) {
   const pathname = usePathname();
+  const { t } = useTranslation();
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -40,7 +34,15 @@ export default function Sidebar({ open, onClose, collapsed, onToggleCollapse, on
     setIsAdmin(user?.role === 'admin');
   }, []);
 
-  const visibleNavItems = NAV_ITEMS.filter((item) => {
+  const navItems = useMemo(() => [
+    { href: '/dashboard', label: t('nav.dashboard'), icon: <DashboardIcon /> },
+    { href: '/projects', label: t('nav.projects'), icon: <FolderIcon /> },
+    { href: '/tasks', label: t('nav.tasks'), icon: <TasksIcon /> },
+    { href: '/users', label: t('nav.users'), adminOnly: true, icon: <UsersIcon /> },
+    { href: '/settings', label: t('nav.settings'), icon: <SettingsIcon /> },
+  ], [t]);
+
+  const visibleNavItems = navItems.filter((item) => {
     if ('adminOnly' in item && item.adminOnly) return isAdmin;
     return true;
   });
@@ -62,7 +64,7 @@ export default function Sidebar({ open, onClose, collapsed, onToggleCollapse, on
         <button
           onClick={onToggleCollapse}
           className="absolute -right-3.5 top-1/2 hidden h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-white text-text-secondary shadow-md transition-colors hover:bg-surface-hover cursor-pointer lg:flex"
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label={collapsed ? t('nav.expandSidebar') : t('nav.collapseSidebar')}
         >
           <ChevronLeftIcon className={`h-4 w-4 transition-transform ${collapsed ? 'rotate-180' : ''}`} />
         </button>
@@ -79,7 +81,7 @@ export default function Sidebar({ open, onClose, collapsed, onToggleCollapse, on
           `}
         >
           <PlusIcon className="h-5 w-5 shrink-0 text-accent" />
-          {!collapsed && <span>Create new project</span>}
+          {!collapsed && <span>{t('nav.createProject')}</span>}
         </button>
       </div>
 
@@ -113,7 +115,7 @@ export default function Sidebar({ open, onClose, collapsed, onToggleCollapse, on
       <div className={`mb-4 flex flex-col gap-2 ${collapsed ? 'items-center px-3' : 'px-4'}`}>
         <button
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-white cursor-pointer hover:bg-accent-hover transition-colors"
-          aria-label="Help"
+          aria-label={t('common.help')}
         >
           <HelpIcon />
         </button>

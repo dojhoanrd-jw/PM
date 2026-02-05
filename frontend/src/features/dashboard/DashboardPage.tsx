@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import useSWR from 'swr';
-import { DASHBOARD_PERIOD_OPTIONS, PILL_SELECT_CLASSES } from '@/lib/constants';
+import { useTranslation } from '@/context/I18nContext';
+import { getDashboardPeriodOptions, PILL_SELECT_CLASSES } from '@/lib/constants';
 import { Skeleton } from '@/components/ui';
 import type {
   OverviewResponse,
@@ -20,7 +21,9 @@ import {
 } from './components';
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const [period, setPeriod] = useState('1month');
+  const periodOptions = useMemo(() => getDashboardPeriodOptions(t), [t]);
 
   const { data: overview, isLoading: l1 } = useSWR<OverviewResponse>(`/dashboard/overview?period=${period}`);
   const { data: progress, isLoading: l2 } = useSWR<ProgressResponse>('/dashboard/progress');
@@ -34,7 +37,7 @@ export default function DashboardPage() {
     return (
       <div className="flex flex-col gap-8">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-text-primary">Dashboard</h2>
+          <h2 className="text-xl font-bold text-text-primary">{t('dashboard.title')}</h2>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => <Skeleton key={i} className="h-36" />)}
@@ -57,13 +60,13 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-8">
       {/* Header row with period selector */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-bold text-text-primary">Dashboard</h2>
+        <h2 className="text-xl font-bold text-text-primary">{t('dashboard.title')}</h2>
         <select
           value={period}
           onChange={(e) => setPeriod(e.target.value)}
           className={PILL_SELECT_CLASSES}
         >
-          {DASHBOARD_PERIOD_OPTIONS.map((p) => (
+          {periodOptions.map((p) => (
             <option key={p.value} value={p.value}>{p.label}</option>
           ))}
         </select>

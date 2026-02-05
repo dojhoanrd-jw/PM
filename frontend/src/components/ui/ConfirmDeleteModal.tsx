@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Button from './Button';
 import Modal from './Modal';
+import { useTranslation } from '@/context/I18nContext';
 
 interface ConfirmDeleteModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface ConfirmDeleteModalProps {
 }
 
 export default function ConfirmDeleteModal({ isOpen, onClose, title, itemName, onConfirm }: ConfirmDeleteModalProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
   const handleConfirm = async () => {
@@ -28,13 +30,12 @@ export default function ConfirmDeleteModal({ isOpen, onClose, title, itemName, o
     <Modal isOpen={isOpen} onClose={onClose} title={title} maxWidth="sm">
       <div className="flex flex-col gap-4">
         <p className="text-sm text-text-secondary">
-          Are you sure you want to delete <strong className="text-text-primary">{itemName}</strong>?
-          This action cannot be undone.
+          {t('delete.confirm', { name: itemName })}
         </p>
         <div className="flex justify-end gap-3">
-          <Button variant="secondary" onClick={onClose} disabled={loading}>Cancel</Button>
+          <Button variant="secondary" onClick={onClose} disabled={loading}>{t('common.cancel')}</Button>
           <Button variant="destructive" onClick={handleConfirm} isLoading={loading}>
-            {loading ? 'Deleting...' : `Delete ${title.replace('Delete ', '')}`}
+            {loading ? t('form.deleting') : title}
           </Button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { AlertProvider } from "@/context/AlertContext";
+import { I18nProvider } from "@/context/I18nContext";
 import SWRProvider from "@/context/SWRProvider";
 import "./globals.css";
 
@@ -23,9 +24,11 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} font-sans antialiased`}>
         <SWRProvider>
-          <AlertProvider>
-            {children}
-          </AlertProvider>
+          <I18nProvider>
+            <AlertProvider>
+              {children}
+            </AlertProvider>
+          </I18nProvider>
         </SWRProvider>
       </body>
     </html>

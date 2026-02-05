@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { Button } from '@/components/ui';
+import { useTranslation } from '@/context/I18nContext';
 
 export default function Error({
   error,
@@ -10,6 +11,8 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { t } = useTranslation();
+
   useEffect(() => {
     console.error('Application error:', error);
   }, [error]);
@@ -22,12 +25,12 @@ export default function Error({
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86l-8.6 14.86A1 1 0 002.54 20h18.92a1 1 0 00.85-1.28l-8.6-14.86a1 1 0 00-1.72 0z" />
           </svg>
         </div>
-        <h1 className="text-xl font-semibold text-text-primary">Something went wrong</h1>
+        <h1 className="text-xl font-semibold text-text-primary">{t('errorPage.somethingWentWrong')}</h1>
         <p className="mt-2 text-sm text-text-secondary">
-          An unexpected error occurred. Please try again.
+          {t('errorPage.unexpectedError')}
         </p>
         <Button onClick={reset} className="mt-6">
-          Try again
+          {t('errorPage.tryAgain')}
         </Button>
       </div>
     </div>

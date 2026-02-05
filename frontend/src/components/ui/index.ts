@@ -20,3 +20,4 @@ export { default as ConfirmDeleteModal } from './ConfirmDeleteModal';
 export { default as DataTable, ActionButtons } from './DataTable';
 export type { Column } from './DataTable';
 export { default as PriorityBadge } from './PriorityBadge';
+export { default as LanguageSelector } from './LanguageSelector';

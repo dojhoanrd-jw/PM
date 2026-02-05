@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from '@/context/I18nContext';
 
 interface MetricCardProps {
   icon: ReactNode;
@@ -11,6 +12,7 @@ interface MetricCardProps {
 }
 
 export default function MetricCard({ icon, iconBg, label, value, total, unit, growth }: MetricCardProps) {
+  const { t } = useTranslation();
   const isPositive = growth >= 0;
 
   return (
@@ -43,7 +45,9 @@ export default function MetricCard({ icon, iconBg, label, value, total, unit, gr
           />
         </svg>
         <span className="text-text-primary">
-          {Math.abs(growth)}% {isPositive ? 'increase' : 'decrease'} from last month
+          {isPositive
+            ? t('metric.increase', { percent: Math.abs(growth) })
+            : t('metric.decrease', { percent: Math.abs(growth) })}
         </span>
       </div>
     </div>

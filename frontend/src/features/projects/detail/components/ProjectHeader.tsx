@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import type { Project } from '@/lib/api';
+import { useTranslation } from '@/context/I18nContext';
 import { useModalState } from '@/hooks';
 import { Card, StatusBadge, Button } from '@/components/ui';
 import { ChevronLeftIcon, EditIcon, TrashIcon } from '@/components/icons';
@@ -13,6 +14,7 @@ interface ProjectHeaderProps {
 }
 
 export default function ProjectHeader({ project, onUpdated }: ProjectHeaderProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const modal = useModalState();
   const role = project.currentUserRole;
@@ -43,7 +45,7 @@ export default function ProjectHeader({ project, onUpdated }: ProjectHeaderProps
             <Button size="sm" variant="secondary" onClick={() => modal.setEditing(project)}>
               <span className="flex items-center gap-1.5">
                 <EditIcon className="h-4 w-4" />
-                Edit Project
+                {t('projectDetail.editProject')}
               </span>
             </Button>
             {role === 'owner' && (
@@ -54,7 +56,7 @@ export default function ProjectHeader({ project, onUpdated }: ProjectHeaderProps
               >
                 <span className="flex items-center gap-1.5">
                   <TrashIcon className="h-4 w-4" />
-                  Delete
+                  {t('projectDetail.delete')}
                 </span>
               </Button>
             )}
