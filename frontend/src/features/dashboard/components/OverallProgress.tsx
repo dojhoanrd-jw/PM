@@ -3,6 +3,7 @@
 import { memo, useMemo } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { ChevronDownIcon } from '@/components/icons';
+import { useTranslation } from '@/context/I18nContext';
 import type { ProjectsHealth } from '../dashboard.types';
 
 interface OverallProgressProps {
@@ -18,11 +19,11 @@ const SEGMENT_ORDER = [
   { key: 'at_risk', color: '#d1d5db' },
 ] as const;
 
-const STAT_ITEMS = [
-  { key: 'total', color: 'text-text-primary', label: 'Total projects' },
-  { key: 'completed', color: 'text-status-completed', label: 'Completed' },
-  { key: 'delayed', color: 'text-status-delayed', label: 'Delayed' },
-  { key: 'on_track', color: 'text-status-ongoing', label: 'On going' },
+const STAT_KEYS = [
+  { key: 'total', color: 'text-text-primary', labelKey: 'dashboard.totalProjects' },
+  { key: 'completed', color: 'text-status-completed', labelKey: 'dashboard.completed' },
+  { key: 'delayed', color: 'text-status-delayed', labelKey: 'dashboard.delayed' },
+  { key: 'on_track', color: 'text-status-ongoing', labelKey: 'dashboard.onGoing' },
 ] as const;
 
 function buildGaugeOption(percent: number, health: ProjectsHealth, total: number) {
@@ -114,6 +115,7 @@ function buildGaugeOption(percent: number, health: ProjectsHealth, total: number
 }
 
 export default memo(function OverallProgress({ totalProjects, completedPercent, health }: OverallProgressProps) {
+  const { t } = useTranslation();
 
   const option = useMemo(
     () => buildGaugeOption(completedPercent, health, totalProjects),
@@ -130,10 +132,10 @@ export default memo(function OverallProgress({ totalProjects, completedPercent, 
   return (
     <div className="rounded-2xl bg-surface p-5">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-text-primary">Overall Progress</h3>
+        <h3 className="text-lg font-semibold text-text-primary">{t('dashboard.overallProgress')}</h3>
         <div className="relative">
           <select className="appearance-none rounded-full bg-white pl-4 pr-8 py-1.5 text-sm font-medium text-text-primary shadow-sm outline-none cursor-pointer">
-            <option>All</option>
+            <option>{t('dashboard.all')}</option>
           </select>
           <span className="absolute right-2.5 top-1/2 -translate-y-1/2"><ChevronDownIcon className="h-4 w-4 text-text-secondary pointer-events-none" /></span>
         </div>
@@ -148,10 +150,10 @@ export default memo(function OverallProgress({ totalProjects, completedPercent, 
       </div>
 
       <div className="grid grid-cols-4 gap-2 text-center">
-        {STAT_ITEMS.map((item) => (
+        {STAT_KEYS.map((item) => (
           <div key={item.key}>
             <p className={`text-2xl font-bold ${item.color}`}>{statValues[item.key]}</p>
-            <p className="text-[11px] text-text-secondary">{item.label}</p>
+            <p className="text-[11px] text-text-secondary">{t(item.labelKey)}</p>
           </div>
         ))}
       </div>

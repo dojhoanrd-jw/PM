@@ -1,15 +1,16 @@
 import type { Project } from '@/lib/api';
+import type { TFn } from '@/context/I18nContext';
 
-export const taskRules = (opts: { projects?: Project[]; mode: 'create' | 'edit' }) => ({
-  title: (v: string) => (!v.trim() ? 'Title is required' : undefined),
-  projectId: (v: string) => (opts.projects && !v ? 'Project is required' : undefined),
-  assigneeId: (v: string) => (!v ? 'Assignee is required' : undefined),
-  estimatedHours: (v: string) => (!v || Number(v) < 0.5 ? 'Min 0.5 hours' : undefined),
+export const taskRules = (t: TFn, opts: { projects?: Project[]; mode: 'create' | 'edit' }) => ({
+  title: (v: string) => (!v.trim() ? t('validation.titleRequired') : undefined),
+  projectId: (v: string) => (opts.projects && !v ? t('validation.projectRequired') : undefined),
+  assigneeId: (v: string) => (!v ? t('validation.assigneeRequired') : undefined),
+  estimatedHours: (v: string) => (!v || Number(v) < 0.5 ? t('validation.minHours') : undefined),
   dueDate: (v: string) => {
-    if (!v) return 'Due date is required';
+    if (!v) return t('validation.dueDateRequired');
     if (opts.mode === 'create') {
       const today = new Date().toISOString().split('T')[0];
-      if (v < today) return 'Due date cannot be in the past';
+      if (v < today) return t('validation.dueDatePast');
     }
     return undefined;
   },

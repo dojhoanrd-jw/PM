@@ -3,6 +3,7 @@
 import { memo, useMemo, useState } from 'react';
 import { StatusBadge } from '@/components/ui';
 import { CheckIcon } from '@/components/icons';
+import { useTranslation } from '@/context/I18nContext';
 import type { TaskItem } from '../dashboard.types';
 
 interface TodayTasksProps {
@@ -10,28 +11,29 @@ interface TodayTasksProps {
   categoryCounts: Record<string, number>;
 }
 
-const TABS = [
-  { key: 'all', label: 'All' },
-  { key: 'important', label: 'Important' },
-  { key: 'notes', label: 'Notes' },
-  { key: 'link', label: 'Links' },
+const TAB_KEYS = [
+  { key: 'all', labelKey: 'dashboard.all' },
+  { key: 'important', labelKey: 'taskCategory.important' },
+  { key: 'notes', labelKey: 'taskCategory.notes' },
+  { key: 'link', labelKey: 'taskCategory.link' },
 ] as const;
 
 export default memo(function TodayTasks({ tasks, categoryCounts }: TodayTasksProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<string>('all');
 
   const filtered = useMemo(() => {
     if (activeTab === 'all') return tasks;
-    return tasks.filter((t) => t.category === activeTab);
+    return tasks.filter((task) => task.category === activeTab);
   }, [tasks, activeTab]);
 
   return (
     <div className="rounded-2xl bg-surface p-5">
-      <h3 className="text-lg font-semibold text-text-primary">Today task</h3>
+      <h3 className="text-lg font-semibold text-text-primary">{t('dashboard.todayTask')}</h3>
 
       {/* Tabs */}
       <div className="mt-4 flex gap-6 border-b border-text-secondary/20">
-        {TABS.map((tab) => {
+        {TAB_KEYS.map((tab) => {
           const count = categoryCounts[tab.key] || 0;
           const isActive = activeTab === tab.key;
           return (
@@ -44,7 +46,7 @@ export default memo(function TodayTasks({ tasks, categoryCounts }: TodayTasksPro
                   : 'text-text-secondary hover:text-text-primary'
               }`}
             >
-              {tab.label}
+              {t(tab.labelKey)}
               {count > 0 && (
                 <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none ${
                   'bg-[#2B5CE6]/15 text-[#2B5CE6]'
@@ -79,7 +81,7 @@ export default memo(function TodayTasks({ tasks, categoryCounts }: TodayTasksPro
           );
         })}
         {filtered.length === 0 && (
-          <p className="py-6 text-center text-sm text-text-secondary">No tasks for today.</p>
+          <p className="py-6 text-center text-sm text-text-secondary">{t('dashboard.noTasksToday')}</p>
         )}
       </div>
     </div>

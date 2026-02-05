@@ -4,11 +4,14 @@ import { useState } from 'react';
 import Link from 'next/link';
 import useSWR, { useSWRConfig } from 'swr';
 import { type Project } from '@/lib/api';
+import { useTranslation } from '@/context/I18nContext';
+import { formatDate } from '@/lib/constants';
 import { Button, Card, StatusBadge, LoadingSpinner, EmptyState } from '@/components/ui';
 import { FolderIcon } from '@/components/icons';
 import { CreateProjectModal } from './components';
 
 export default function ProjectsPage() {
+  const { t, locale } = useTranslation();
   const [modalOpen, setModalOpen] = useState(false);
   const { mutate } = useSWRConfig();
 
@@ -21,12 +24,12 @@ export default function ProjectsPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-text-primary">Projects</h2>
+          <h2 className="text-xl font-semibold text-text-primary">{t('projects.title')}</h2>
           <p className="mt-1 text-sm text-text-secondary">
-            Manage and track all your projects
+            {t('projects.subtitle')}
           </p>
         </div>
-        <Button onClick={() => setModalOpen(true)}>+ New Project</Button>
+        <Button onClick={() => setModalOpen(true)}>+ {t('projects.newProject')}</Button>
       </div>
 
       {isLoading ? (
@@ -38,9 +41,9 @@ export default function ProjectsPage() {
               <FolderIcon className="h-7 w-7 text-accent" />
             </div>
           }
-          title="No projects yet"
-          description="Create your first project to start tracking tasks and progress."
-          action={<Button onClick={() => setModalOpen(true)}>+ Create Project</Button>}
+          title={t('projects.noProjectsYet')}
+          description={t('projects.noProjectsDesc')}
+          action={<Button onClick={() => setModalOpen(true)}>+ {t('projects.createProject')}</Button>}
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -62,8 +65,8 @@ export default function ProjectsPage() {
 
                 <div className="mt-auto flex flex-col gap-2 border-t border-border-light pt-3">
                   <div className="flex items-center justify-between text-xs text-text-secondary">
-                    <span>Manager: {project.managerName}</span>
-                    <span>Due: {new Date(project.dueDate).toLocaleDateString()}</span>
+                    <span>{t('projects.manager', { name: project.managerName })}</span>
+                    <span>{t('projects.due', { date: formatDate(project.dueDate, locale) })}</span>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -79,7 +82,7 @@ export default function ProjectsPage() {
                   </div>
 
                   <div className="flex items-center justify-between text-xs text-text-muted">
-                    <span>{project.completedTasks}/{project.totalTasks} tasks</span>
+                    <span>{t('projects.taskCount', { completed: project.completedTasks, total: project.totalTasks })}</span>
                     <span className={`capitalize ${project.status === 'active' ? 'text-status-completed' : 'text-text-muted'}`}>
                       {project.status}
                     </span>

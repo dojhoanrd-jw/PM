@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { api, type Project, type TeamUser } from '@/lib/api';
 import { useAlerts } from '@/context/AlertContext';
+import { useTranslation } from '@/context/I18nContext';
 import { handleApiError } from '@/hooks';
 import { Button, Select, Modal } from '@/components/ui';
 
@@ -14,6 +15,7 @@ interface AddMemberModalProps {
 }
 
 export default function AddMemberModal({ project, isOpen, onClose, onUpdated }: AddMemberModalProps) {
+  const { t } = useTranslation();
   const { showSuccess, showError } = useAlerts();
   const [users, setUsers] = useState<TeamUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
@@ -58,26 +60,26 @@ export default function AddMemberModal({ project, isOpen, onClose, onUpdated }: 
         name: user.name,
         role: user.role,
       });
-      showSuccess('Member added successfully');
+      showSuccess(t('success.memberAdded'));
       onUpdated();
       onClose();
     } catch (err) {
-      handleApiError(err, showError, 'adding member');
+      handleApiError(err, showError, 'adding member', t);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Add Team Member" maxWidth="sm">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('modal.addTeamMember')} maxWidth="sm">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Select
           id="member-select"
-          label="Select Member"
+          label={t('form.selectMember')}
           value={selectedEmail}
           onChange={(e) => setSelectedEmail(e.target.value)}
           disabled={loadingUsers}
-          placeholder={loadingUsers ? 'Loading users...' : 'Select a team member'}
+          placeholder={loadingUsers ? t('common.loading') : t('form.selectMember')}
         >
           {availableUsers.map((user) => (
             <option key={user.email} value={user.email}>
@@ -86,15 +88,15 @@ export default function AddMemberModal({ project, isOpen, onClose, onUpdated }: 
           ))}
         </Select>
         {!loadingUsers && availableUsers.length === 0 && (
-          <p className="text-xs text-text-muted">All users are already members of this project.</p>
+          <p className="text-xs text-text-muted">{t('projectDetail.allUsersAlreadyMembers')}</p>
         )}
 
         <div className="mt-2 flex justify-end gap-3">
           <Button type="button" variant="secondary" onClick={onClose} disabled={loading}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button type="submit" isLoading={loading} disabled={!selectedEmail}>
-            {loading ? 'Adding...' : 'Add Member'}
+            {loading ? t('form.adding') : t('form.addMember')}
           </Button>
         </div>
       </form>

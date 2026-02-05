@@ -2,7 +2,8 @@
 
 import { useMemo } from 'react';
 import type { Task, ProjectMember } from '@/lib/api';
-import { STATUS_OPTIONS, PRIORITY_OPTIONS, FILTER_SELECT_CLASSES, formatDate } from '@/lib/constants';
+import { useTranslation } from '@/context/I18nContext';
+import { getStatusOptions, getPriorityOptions, FILTER_SELECT_CLASSES, formatDate } from '@/lib/constants';
 import { useFilterState, useModalState } from '@/hooks';
 import { Card, Button, StatusBadge, PriorityBadge, EmptyState, DataTable, ActionButtons } from '@/components/ui';
 import type { Column } from '@/components/ui';
@@ -27,58 +28,62 @@ const taskFilterFn = (t: Task, f: Record<string, string>) => {
 };
 
 export default function ProjectTasks({ projectId, tasks, members, onTaskChanged, userRole }: ProjectTasksProps) {
+  const { t, locale } = useTranslation();
   const { filters, filtered: filteredTasks, updateFilter, clearFilters } = useFilterState(tasks, INITIAL_FILTERS, taskFilterFn);
   const modal = useModalState<Task>();
 
+  const statusOptions = useMemo(() => getStatusOptions(t), [t]);
+  const priorityOptions = useMemo(() => getPriorityOptions(t), [t]);
+
   const columns: Column<Task>[] = useMemo(() => [
     {
-      header: 'Title',
+      header: t('table.title'),
       render: (task) => <span className="font-medium text-text-primary">{task.title}</span>,
     },
     {
-      header: 'Assignee',
+      header: t('table.assignee'),
       render: (task) => <span className="text-text-secondary whitespace-nowrap">{task.assigneeName}</span>,
     },
     {
-      header: 'Status',
+      header: t('table.status'),
       render: (task) => <StatusBadge status={task.status} className="!text-[11px]" />,
     },
     {
-      header: 'Priority',
+      header: t('table.priority'),
       render: (task) => <PriorityBadge priority={task.priority} />,
     },
     {
-      header: 'Due Date',
-      render: (task) => <span className="text-text-secondary whitespace-nowrap">{formatDate(task.dueDate)}</span>,
+      header: t('table.dueDate'),
+      render: (task) => <span className="text-text-secondary whitespace-nowrap">{formatDate(task.dueDate, locale)}</span>,
     },
     {
-      header: 'Hours',
+      header: t('table.hours'),
       headerClassName: 'pb-3 pr-4 font-semibold text-text-primary text-right',
       render: (task) => <span className="block text-right text-text-secondary">{task.estimatedHours}h</span>,
     },
     {
-      header: 'Actions',
+      header: t('table.actions'),
       headerClassName: 'pb-3 font-semibold text-text-primary text-right',
       render: (task) => (
         <ActionButtons
           onEdit={() => modal.setEditing(task)}
           onDelete={() => modal.setDeleting(task)}
-          editLabel="Edit task"
-          deleteLabel="Delete task"
+          editLabel={t('tasks.editTask')}
+          deleteLabel={t('tasks.deleteTask')}
         />
       ),
     },
-  ], [modal]);
+  ], [modal, t, locale]);
 
   return (
     <>
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-text-primary">Tasks</h3>
+          <h3 className="text-lg font-semibold text-text-primary">{t('nav.tasks')}</h3>
           <Button size="sm" onClick={modal.openCreate}>
             <span className="flex items-center gap-1.5">
               <PlusIcon />
-              Add Task
+              {t('tasks.addTask')}
             </span>
           </Button>
         </div>
@@ -92,7 +97,7 @@ export default function ProjectTasks({ projectId, tasks, members, onTaskChanged,
             onChange={(e) => updateFilter('status', e.target.value)}
             className={FILTER_SELECT_CLASSES}
           >
-            {STATUS_OPTIONS.map((opt) => (
+            {statusOptions.map((opt) => (
               <option key={opt.key} value={opt.key}>{opt.label}</option>
             ))}
           </select>
@@ -102,31 +107,31 @@ export default function ProjectTasks({ projectId, tasks, members, onTaskChanged,
             onChange={(e) => updateFilter('priority', e.target.value)}
             className={FILTER_SELECT_CLASSES}
           >
-            {PRIORITY_OPTIONS.map((opt) => (
+            {priorityOptions.map((opt) => (
               <option key={opt.key} value={opt.key}>{opt.label}</option>
             ))}
           </select>
 
           <span className="text-sm text-text-muted ml-auto">
-            {filteredTasks.length} of {tasks.length} task{tasks.length !== 1 ? 's' : ''}
+            {t('common.countOf', { filtered: filteredTasks.length, total: tasks.length })}
           </span>
         </div>
 
         {/* Table */}
         {tasks.length === 0 ? (
           <EmptyState
-            title="No tasks yet"
-            description="Click &quot;Add Task&quot; to get started."
-            action={<Button size="sm" onClick={modal.openCreate}>+ Add Task</Button>}
+            title={t('tasks.noTasksYet')}
+            description={t('tasks.noTasksDesc')}
+            action={<Button size="sm" onClick={modal.openCreate}>+ {t('tasks.addTask')}</Button>}
           />
         ) : filteredTasks.length === 0 ? (
           <Card className="py-8 text-center">
-            <p className="text-sm text-text-secondary">No tasks match the selected filters.</p>
+            <p className="text-sm text-text-secondary">{t('tasks.noTasksMatch')}</p>
             <button
               onClick={clearFilters}
               className="mt-2 text-sm text-accent hover:underline cursor-pointer"
             >
-              Clear filters
+              {t('common.clearFilters')}
             </button>
           </Card>
         ) : (

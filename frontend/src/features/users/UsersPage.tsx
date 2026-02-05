@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
 import { api, type TeamUser } from '@/lib/api';
 import { useAlerts } from '@/context/AlertContext';
+import { useTranslation } from '@/context/I18nContext';
 import { getCurrentUser } from '@/lib/auth';
-import { ROLE_LABELS, ROLE_STYLES, ROLE_OPTIONS, FILTER_SELECT_CLASSES } from '@/lib/constants';
+import { getRoleLabels, ROLE_STYLES, getRoleOptions, FILTER_SELECT_CLASSES } from '@/lib/constants';
 import { useFilterState, useModalState } from '@/hooks';
 import { Card, Button, ConfirmDeleteModal, LoadingSpinner, EmptyState, DataTable, ActionButtons } from '@/components/ui';
 import type { Column } from '@/components/ui';
@@ -13,10 +14,14 @@ import { PlusIcon } from '@/components/icons';
 import { UserFormModal } from './components';
 
 export default function UsersPage() {
+  const { t } = useTranslation();
   const { showSuccess } = useAlerts();
   const { mutate } = useSWRConfig();
   const [isAdmin, setIsAdmin] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
+
+  const roleLabels = useMemo(() => getRoleLabels(t), [t]);
+  const roleOptions = useMemo(() => getRoleOptions(t), [t]);
 
   useEffect(() => {
     const user = getCurrentUser();
@@ -40,44 +45,44 @@ export default function UsersPage() {
   const handleDelete = async () => {
     if (!modal.deleting) return;
     await api.deleteUser(modal.deleting.email);
-    showSuccess('User deleted successfully');
+    showSuccess(t('success.userDeleted'));
     modal.closeDelete();
     revalidate();
   };
 
   const columns: Column<TeamUser>[] = useMemo(() => [
     {
-      header: 'Name',
+      header: t('table.name'),
       render: (user) => <span className="font-medium text-text-primary">{user.name}</span>,
     },
     {
-      header: 'Email',
+      header: t('table.email'),
       render: (user) => <span className="text-text-secondary">{user.email}</span>,
     },
     {
-      header: 'Role',
+      header: t('table.role'),
       render: (user) => {
         const style = ROLE_STYLES[user.role] || 'bg-gray-100 text-gray-600';
         return (
           <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-medium ${style}`}>
-            {ROLE_LABELS[user.role] || user.role}
+            {roleLabels[user.role] || user.role}
           </span>
         );
       },
     },
     {
-      header: 'Actions',
+      header: t('table.actions'),
       headerClassName: 'pb-3 font-semibold text-text-primary text-right',
       render: (user) => (
         <ActionButtons
           onEdit={() => modal.setEditing(user)}
           onDelete={() => modal.setDeleting(user)}
-          editLabel="Edit user"
-          deleteLabel="Delete user"
+          editLabel={t('users.editUser')}
+          deleteLabel={t('users.deleteUser')}
         />
       ),
     },
-  ], [modal]);
+  ], [modal, t, roleLabels]);
 
   if (!authChecked) {
     return <LoadingSpinner />;
@@ -86,8 +91,8 @@ export default function UsersPage() {
   if (!isAdmin) {
     return (
       <Card className="py-10 text-center">
-        <p className="text-lg font-medium text-text-primary">Access Denied</p>
-        <p className="mt-2 text-sm text-text-secondary">You need administrator privileges to access this page.</p>
+        <p className="text-lg font-medium text-text-primary">{t('users.accessDenied')}</p>
+        <p className="mt-2 text-sm text-text-secondary">{t('users.accessDeniedDesc')}</p>
       </Card>
     );
   }
@@ -97,13 +102,13 @@ export default function UsersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-text-primary">Users</h2>
-          <p className="mt-1 text-sm text-text-secondary">Manage team members and their roles</p>
+          <h2 className="text-xl font-semibold text-text-primary">{t('users.title')}</h2>
+          <p className="mt-1 text-sm text-text-secondary">{t('users.subtitle')}</p>
         </div>
         <Button onClick={modal.openCreate}>
           <span className="flex items-center gap-1.5">
             <PlusIcon />
-            Add User
+            {t('users.addUser')}
           </span>
         </Button>
       </div>
@@ -115,13 +120,13 @@ export default function UsersPage() {
           onChange={(e) => updateFilter('role', e.target.value)}
           className={FILTER_SELECT_CLASSES}
         >
-          {ROLE_OPTIONS.map((opt) => (
+          {roleOptions.map((opt) => (
             <option key={opt.key} value={opt.key}>{opt.label}</option>
           ))}
         </select>
 
         <span className="text-sm text-text-muted ml-auto">
-          {filteredUsers.length} of {userList.length} user{userList.length !== 1 ? 's' : ''}
+          {t('common.countOf', { filtered: filteredUsers.length, total: userList.length })}
         </span>
       </div>
 
@@ -130,18 +135,18 @@ export default function UsersPage() {
         <LoadingSpinner />
       ) : userList.length === 0 ? (
         <EmptyState
-          title="No users found"
-          description="Click &quot;Add User&quot; to create one."
-          action={<Button onClick={modal.openCreate}>+ Add User</Button>}
+          title={t('users.noUsersFound')}
+          description={t('users.noUsersDesc')}
+          action={<Button onClick={modal.openCreate}>+ {t('users.addUser')}</Button>}
         />
       ) : filteredUsers.length === 0 ? (
         <Card className="py-8 text-center">
-          <p className="text-sm text-text-secondary">No users match the selected filter.</p>
+          <p className="text-sm text-text-secondary">{t('users.noUsersMatch')}</p>
           <button
             onClick={clearFilters}
             className="mt-2 text-sm text-accent hover:underline cursor-pointer"
           >
-            Clear filter
+            {t('common.clearFilter')}
           </button>
         </Card>
       ) : (
@@ -172,7 +177,7 @@ export default function UsersPage() {
         <ConfirmDeleteModal
           isOpen={!!modal.deleting}
           onClose={modal.closeDelete}
-          title="Delete User"
+          title={t('modal.deleteUser')}
           itemName={modal.deleting.name}
           onConfirm={handleDelete}
         />

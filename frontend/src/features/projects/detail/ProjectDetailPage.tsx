@@ -3,10 +3,12 @@
 import { useParams, useRouter } from 'next/navigation';
 import useSWR, { useSWRConfig } from 'swr';
 import { type Project, type Task } from '@/lib/api';
+import { useTranslation } from '@/context/I18nContext';
 import { Card, Button } from '@/components/ui';
 import { ProjectHeader, ProjectInfoCards, ProjectTasks, ProjectMembers } from './components';
 
 export default function ProjectDetailPage() {
+  const { t, locale } = useTranslation();
   const params = useParams();
   const router = useRouter();
   const { mutate } = useSWRConfig();
@@ -35,9 +37,9 @@ export default function ProjectDetailPage() {
   if (!data) {
     return (
       <Card className="flex flex-col items-center justify-center py-16 text-center">
-        <h3 className="text-lg font-medium text-text-primary">Project not found</h3>
+        <h3 className="text-lg font-medium text-text-primary">{t('projectDetail.notFound')}</h3>
         <Button className="mt-4" onClick={() => router.push('/projects')}>
-          Back to Projects
+          {t('projectDetail.backToProjects')}
         </Button>
       </Card>
     );

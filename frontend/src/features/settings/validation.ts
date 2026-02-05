@@ -1,17 +1,19 @@
+import type { TFn } from '@/context/I18nContext';
+
 interface PasswordForm {
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
 }
 
-export const passwordRules = {
-  currentPassword: (v: string) => (!v ? 'Current password is required' : undefined),
+export const passwordRules = (t: TFn) => ({
+  currentPassword: (v: string) => (!v ? t('validation.currentPasswordRequired') : undefined),
   newPassword: (v: string, form: PasswordForm) => {
-    if (!v || v.length < 6) return 'New password must be at least 6 characters';
+    if (!v || v.length < 6) return t('validation.newPasswordMin');
     if (form.currentPassword && v === form.currentPassword)
-      return 'New password must be different from current';
+      return t('validation.newPasswordDifferent');
     return undefined;
   },
   confirmPassword: (v: string, form: PasswordForm) =>
-    v !== form.newPassword ? 'Passwords do not match' : undefined,
-};
+    v !== form.newPassword ? t('validation.passwordsNoMatch') : undefined,
+});

@@ -1,11 +1,12 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
-import { IconButton } from '@/components/ui';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { IconButton, LanguageSelector } from '@/components/ui';
 import { getCurrentUser } from '@/lib/auth';
 import { storage } from '@/lib/storage';
-import { PAGE_TITLES } from '@/lib/constants';
+import { getPageTitles } from '@/lib/constants';
+import { useTranslation } from '@/context/I18nContext';
 import {
   MenuIcon,
   SearchIcon,
@@ -21,6 +22,7 @@ interface HeaderProps {
 export default function Header({ onMenuClick }: HeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useTranslation();
   const [userName, setUserName] = useState('');
   const [userRole, setUserRole] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -42,7 +44,8 @@ export default function Header({ onMenuClick }: HeaderProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const title = PAGE_TITLES[pathname] || 'Dashboard';
+  const pageTitles = useMemo(() => getPageTitles(t), [t]);
+  const title = pageTitles[pathname] || t('nav.dashboard');
 
   const handleLogout = () => {
     storage.clearSession();
@@ -59,7 +62,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
         <button
           onClick={onMenuClick}
           className="rounded-lg p-2 text-text-secondary hover:bg-surface-hover lg:hidden cursor-pointer"
-          aria-label="Toggle menu"
+          aria-label={t('header.toggleMenu')}
         >
           <MenuIcon />
         </button>
@@ -72,12 +75,12 @@ export default function Header({ onMenuClick }: HeaderProps) {
           <SearchIcon className="h-4 w-4 text-text-secondary" />
           <input
             type="text"
-            placeholder="Search for anything..."
+            placeholder={t('common.search')}
             className="w-44 bg-transparent text-sm text-text-primary placeholder:text-text-secondary outline-none"
           />
         </div>
 
-        <IconButton icon={<BellIcon />} label="Notifications" />
+        <IconButton icon={<BellIcon />} label={t('header.notifications')} />
 
         {/* User dropdown */}
         <div className="relative" ref={dropdownRef}>
@@ -97,12 +100,16 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
           {dropdownOpen && (
             <div className="absolute right-0 top-full mt-2 w-48 rounded-xl bg-white py-1 shadow-lg">
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-light">
+                <span className="text-xs text-text-muted">{t('header.language')}</span>
+                <LanguageSelector />
+              </div>
               <button
                 onClick={handleLogout}
                 className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-text-primary hover:bg-surface-hover transition-colors cursor-pointer"
               >
                 <LogoutIcon className="h-4 w-4 text-text-secondary" />
-                Log out
+                {t('header.logOut')}
               </button>
             </div>
           )}

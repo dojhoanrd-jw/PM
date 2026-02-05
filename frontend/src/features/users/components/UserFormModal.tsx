@@ -3,8 +3,10 @@
 import { memo, useEffect, useMemo } from 'react';
 import { api, type TeamUser } from '@/lib/api';
 import { useAlerts } from '@/context/AlertContext';
+import { useTranslation } from '@/context/I18nContext';
 import { handleApiError, useFormState, useValidation } from '@/hooks';
 import { userRules } from '../validation';
+import { getRoleOptions } from '@/lib/constants';
 import { Button, Input, Select, Modal } from '@/components/ui';
 
 interface UserFormData {
@@ -29,10 +31,17 @@ interface UserFormModalProps {
 export default memo(function UserFormModal({
   isOpen, onClose, onSaved, initialData, mode,
 }: UserFormModalProps) {
+  const { t } = useTranslation();
   const { showSuccess, showError } = useAlerts();
   const { form, setForm, loading, setLoading, update } = useFormState<UserFormData>(EMPTY_FORM);
 
-  const rules = useMemo(() => userRules(mode), [mode]);
+  const roleFormOptions = useMemo(() => {
+    const allOptions = getRoleOptions(t);
+    // Filter out the "all" option for form usage, and convert key -> value
+    return allOptions.filter(o => o.key !== 'all').map(o => ({ value: o.key, label: o.label }));
+  }, [t]);
+
+  const rules = useMemo(() => userRules(t, mode), [t, mode]);
 
   const { errors, setErrors, validate, clearErrors } = useValidation<UserFormData>(rules);
 
@@ -62,7 +71,7 @@ export default memo(function UserFormModal({
           name: form.name.trim(),
           role: form.role,
         });
-        showSuccess('User updated successfully');
+        showSuccess(t('success.userUpdated'));
       } else {
         await api.createUser({
           email: form.email.trim(),
@@ -70,23 +79,23 @@ export default memo(function UserFormModal({
           role: form.role,
           password: form.password,
         });
-        showSuccess('User created successfully');
+        showSuccess(t('success.userCreated'));
       }
       onSaved();
       onClose();
     } catch (err) {
-      handleApiError(err, showError, `${mode === 'edit' ? 'updating' : 'creating'} user`);
+      handleApiError(err, showError, `${mode === 'edit' ? 'updating' : 'creating'} user`, t);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={mode === 'edit' ? 'Edit User' : 'Create User'} maxWidth="sm">
+    <Modal isOpen={isOpen} onClose={onClose} title={mode === 'edit' ? t('modal.editUser') : t('modal.createUser')} maxWidth="sm">
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
         <Input
           id="user-name"
-          label="Name"
+          label={t('form.name')}
           value={form.name}
           onChange={(e) => update('name', e.target.value)}
           error={errors.name}
@@ -95,7 +104,7 @@ export default memo(function UserFormModal({
         {mode === 'create' && (
           <Input
             id="user-email"
-            label="Email"
+            label={t('form.email')}
             type="email"
             value={form.email}
             onChange={(e) => update('email', e.target.value)}
@@ -105,20 +114,16 @@ export default memo(function UserFormModal({
 
         <Select
           id="user-role"
-          label="Role"
+          label={t('form.role')}
           value={form.role}
           onChange={(e) => update('role', e.target.value)}
-          options={[
-            { value: 'member', label: 'Member' },
-            { value: 'project_manager', label: 'Project Manager' },
-            { value: 'admin', label: 'Admin' },
-          ]}
+          options={roleFormOptions}
         />
 
         {mode === 'create' && (
           <Input
             id="user-password"
-            label="Password"
+            label={t('form.password')}
             type="password"
             value={form.password}
             onChange={(e) => update('password', e.target.value)}
@@ -127,9 +132,9 @@ export default memo(function UserFormModal({
         )}
 
         <div className="mt-2 flex justify-end gap-3">
-          <Button type="button" variant="secondary" onClick={onClose} disabled={loading}>Cancel</Button>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={loading}>{t('common.cancel')}</Button>
           <Button type="submit" isLoading={loading}>
-            {loading ? (mode === 'edit' ? 'Saving...' : 'Creating...') : (mode === 'edit' ? 'Save Changes' : 'Create User')}
+            {loading ? (mode === 'edit' ? t('form.saving') : t('form.creating')) : (mode === 'edit' ? t('form.saveChanges') : t('form.createUser'))}
           </Button>
         </div>
       </form>

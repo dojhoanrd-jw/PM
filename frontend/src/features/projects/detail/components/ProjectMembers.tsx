@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, type Project } from '@/lib/api';
 import { useAlerts } from '@/context/AlertContext';
+import { useTranslation } from '@/context/I18nContext';
 import { getCurrentUser } from '@/lib/auth';
 import { Card, Button, Spinner, EmptyState } from '@/components/ui';
 import AddMemberModal from './AddMemberModal';
@@ -14,6 +15,7 @@ interface ProjectMembersProps {
 }
 
 export default function ProjectMembers({ project, onUpdated }: ProjectMembersProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const { showSuccess, showError } = useAlerts();
   const [addOpen, setAddOpen] = useState(false);
@@ -28,10 +30,10 @@ export default function ProjectMembers({ project, onUpdated }: ProjectMembersPro
     setRemovingEmail(email);
     try {
       await api.removeProjectMember(project.projectId, email);
-      showSuccess('Member removed');
+      showSuccess(t('success.memberRemoved'));
       onUpdated();
     } catch {
-      showError('Failed to remove member');
+      showError(t('projectDetail.removeMember'));
     } finally {
       setRemovingEmail(null);
     }
@@ -42,10 +44,10 @@ export default function ProjectMembers({ project, onUpdated }: ProjectMembersPro
     setLeavingProject(true);
     try {
       await api.removeProjectMember(project.projectId, currentUser.email);
-      showSuccess('You left the project');
+      showSuccess(t('success.leftProject'));
       router.push('/projects');
     } catch {
-      showError('Failed to leave project');
+      showError(t('projectDetail.leaveProject'));
     } finally {
       setLeavingProject(false);
     }
@@ -55,12 +57,12 @@ export default function ProjectMembers({ project, onUpdated }: ProjectMembersPro
     <>
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-text-primary">Team Members</h3>
+          <h3 className="text-lg font-semibold text-text-primary">{t('projectDetail.teamMembers')}</h3>
           <div className="flex items-center gap-3">
             <span className="text-sm text-text-muted">{members.length} member{members.length !== 1 ? 's' : ''}</span>
             {role !== 'owner' && (
               <Button size="sm" variant="secondary" onClick={handleLeave} isLoading={leavingProject}>
-                {leavingProject ? 'Leaving...' : 'Leave Project'}
+                {leavingProject ? t('projectDetail.leaving') : t('projectDetail.leaveProject')}
               </Button>
             )}
             {role === 'owner' && (
@@ -69,7 +71,7 @@ export default function ProjectMembers({ project, onUpdated }: ProjectMembersPro
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
                   </svg>
-                  Add Member
+                  {t('projectDetail.addMember')}
                 </span>
               </Button>
             )}
@@ -80,9 +82,9 @@ export default function ProjectMembers({ project, onUpdated }: ProjectMembersPro
 
         {members.length === 0 ? (
           <EmptyState
-            title="No members yet"
-            description="Click &quot;Add Member&quot; to get started."
-            action={role === 'owner' ? <Button size="sm" onClick={() => setAddOpen(true)}>+ Add Member</Button> : undefined}
+            title={t('projectDetail.noMembersYet')}
+            description={t('projectDetail.noMembersDesc')}
+            action={role === 'owner' ? <Button size="sm" onClick={() => setAddOpen(true)}>+ {t('projectDetail.addMember')}</Button> : undefined}
           />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -100,7 +102,7 @@ export default function ProjectMembers({ project, onUpdated }: ProjectMembersPro
                     onClick={() => handleRemove(member.email)}
                     disabled={removingEmail === member.email}
                     className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-text-muted hover:bg-red-50 hover:text-red-500 transition-colors cursor-pointer disabled:opacity-50"
-                    title="Remove member"
+                    title={t('projectDetail.removeMember')}
                   >
                     {removingEmail === member.email ? (
                       <Spinner className="h-3.5 w-3.5" />

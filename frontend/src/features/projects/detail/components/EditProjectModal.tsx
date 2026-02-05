@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api, type Project, type TeamUser } from '@/lib/api';
 import { useAlerts } from '@/context/AlertContext';
+import { useTranslation } from '@/context/I18nContext';
 import { handleApiError, useFormState, useValidation } from '@/hooks';
 import { projectRules } from '../../validation';
-import { PROJECT_STATUS_OPTIONS, PROJECT_PROGRESS_OPTIONS } from '@/lib/constants';
+import { getProjectStatusOptions, getProjectProgressOptions } from '@/lib/constants';
 import { Button, Input, Textarea, Select, Modal } from '@/components/ui';
 
 interface EditProjectModalProps {
@@ -25,9 +26,13 @@ const INITIAL_FORM = {
 };
 
 export default function EditProjectModal({ project, isOpen, onClose, onUpdated }: EditProjectModalProps) {
+  const { t } = useTranslation();
   const { showSuccess, showError } = useAlerts();
   const { form, setForm, loading, setLoading, update } = useFormState(INITIAL_FORM);
-  const { errors, validate, clearErrors } = useValidation<typeof INITIAL_FORM>(projectRules);
+  const rules = useMemo(() => projectRules(t), [t]);
+  const statusOptions = useMemo(() => getProjectStatusOptions(t), [t]);
+  const progressOptions = useMemo(() => getProjectProgressOptions(t), [t]);
+  const { errors, validate, clearErrors } = useValidation<typeof INITIAL_FORM>(rules);
   const [users, setUsers] = useState<TeamUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
 
@@ -80,22 +85,22 @@ export default function EditProjectModal({ project, isOpen, onClose, onUpdated }
         managerName: selectedManager?.name || project.managerName,
         dueDate: form.dueDate,
       });
-      showSuccess('Project updated successfully');
+      showSuccess(t('success.projectUpdated'));
       onUpdated();
       onClose();
     } catch (err) {
-      handleApiError(err, showError, 'updating project');
+      handleApiError(err, showError, 'updating project', t);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Edit Project" maxWidth="md">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('modal.editProject')} maxWidth="md">
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
         <Input
           id="edit-name"
-          label="Project Name"
+          label={t('form.projectName')}
           value={form.name}
           onChange={(e) => update('name', e.target.value)}
           error={errors.name}
@@ -103,7 +108,7 @@ export default function EditProjectModal({ project, isOpen, onClose, onUpdated }
 
         <Textarea
           id="edit-desc"
-          label="Description"
+          label={t('form.description')}
           value={form.description}
           onChange={(e) => update('description', e.target.value)}
           rows={3}
@@ -113,30 +118,30 @@ export default function EditProjectModal({ project, isOpen, onClose, onUpdated }
         <div className="grid grid-cols-2 gap-4">
           <Select
             id="edit-status"
-            label="Status"
+            label={t('form.status')}
             value={form.status}
             onChange={(e) => update('status', e.target.value)}
-            options={PROJECT_STATUS_OPTIONS}
+            options={statusOptions}
           />
 
           <Select
             id="edit-progress"
-            label="Progress"
+            label={t('form.progress')}
             value={form.progress}
             onChange={(e) => update('progress', e.target.value)}
-            options={PROJECT_PROGRESS_OPTIONS}
+            options={progressOptions}
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <Select
             id="edit-manager"
-            label="Project Manager"
+            label={t('form.projectManager')}
             value={form.managerId}
             onChange={(e) => update('managerId', e.target.value)}
             disabled={loadingUsers}
             error={errors.managerId}
-            placeholder={loadingUsers ? 'Loading...' : 'Select a manager'}
+            placeholder={loadingUsers ? t('common.loading') : t('form.selectManager')}
           >
             {users.map((user) => (
               <option key={user.email} value={user.email}>
@@ -147,7 +152,7 @@ export default function EditProjectModal({ project, isOpen, onClose, onUpdated }
 
           <Input
             id="edit-due"
-            label="Due Date"
+            label={t('form.dueDate')}
             type="date"
             value={form.dueDate}
             onChange={(e) => update('dueDate', e.target.value)}
@@ -157,10 +162,10 @@ export default function EditProjectModal({ project, isOpen, onClose, onUpdated }
 
         <div className="mt-2 flex justify-end gap-3">
           <Button type="button" variant="secondary" onClick={onClose} disabled={loading}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button type="submit" isLoading={loading}>
-            {loading ? 'Saving...' : 'Save Changes'}
+            {loading ? t('form.saving') : t('form.saveChanges')}
           </Button>
         </div>
       </form>

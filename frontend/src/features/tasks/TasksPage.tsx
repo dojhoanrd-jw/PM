@@ -4,8 +4,9 @@ import { useMemo } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
 import { api, type Task, type Project } from '@/lib/api';
 import { useAlerts } from '@/context/AlertContext';
+import { useTranslation } from '@/context/I18nContext';
 import { getCurrentUser } from '@/lib/auth';
-import { FILTER_SELECT_CLASSES, formatDate } from '@/lib/constants';
+import { FILTER_SELECT_CLASSES, formatDate, getStatusOptions, getPriorityOptions } from '@/lib/constants';
 import { useFilterState, useModalState } from '@/hooks';
 import { Card, StatusBadge, PriorityBadge, Button, ConfirmDeleteModal, LoadingSpinner, EmptyState, DataTable, ActionButtons } from '@/components/ui';
 import type { Column } from '@/components/ui';
@@ -13,9 +14,13 @@ import { PlusIcon, TasksIcon } from '@/components/icons';
 import { TaskFormModal } from './components';
 
 export default function TasksPage() {
+  const { t, locale } = useTranslation();
   const { showSuccess } = useAlerts();
   const { mutate } = useSWRConfig();
   const currentUserRole = getCurrentUser()?.role;
+
+  const statusOptions = useMemo(() => getStatusOptions(t), [t]);
+  const priorityOptions = useMemo(() => getPriorityOptions(t), [t]);
 
   const { data: tasksData, isLoading: loadingTasks } = useSWR<{ tasks: Task[] }>('/tasks');
   const { data: projectsData, isLoading: loadingProjects } = useSWR<{ projects: Project[] }>('/projects');
@@ -73,60 +78,60 @@ export default function TasksPage() {
 
   const columns: Column<Task>[] = useMemo(() => [
     {
-      header: 'Title',
+      header: t('table.title'),
       render: (task) => <span className="font-medium text-text-primary">{task.title}</span>,
     },
     {
-      header: 'Project',
+      header: t('table.project'),
       render: (task) => <span className="text-text-secondary whitespace-nowrap">{task.projectName}</span>,
     },
     {
-      header: 'Assignee',
+      header: t('table.assignee'),
       render: (task) => <span className="text-text-secondary whitespace-nowrap">{task.assigneeName}</span>,
     },
     {
-      header: 'Status',
+      header: t('table.status'),
       render: (task) => <StatusBadge status={task.status} className="!text-[11px]" />,
     },
     {
-      header: 'Priority',
+      header: t('table.priority'),
       render: (task) => <PriorityBadge priority={task.priority} />,
     },
     {
-      header: 'Due Date',
-      render: (task) => <span className="text-text-secondary whitespace-nowrap">{formatDate(task.dueDate)}</span>,
+      header: t('table.dueDate'),
+      render: (task) => <span className="text-text-secondary whitespace-nowrap">{formatDate(task.dueDate, locale)}</span>,
     },
     {
-      header: 'Hours',
+      header: t('table.hours'),
       headerClassName: 'pb-3 pr-4 font-semibold text-text-primary text-right',
       render: (task) => <span className="block text-right text-text-secondary">{task.estimatedHours}h</span>,
     },
     {
-      header: 'Actions',
+      header: t('table.actions'),
       headerClassName: 'pb-3 font-semibold text-text-primary text-right',
       render: (task) => (
         <ActionButtons
           onEdit={() => modal.setEditing(task)}
           onDelete={() => modal.setDeleting(task)}
-          editLabel="Edit task"
-          deleteLabel="Delete task"
+          editLabel={t('tasks.editTask')}
+          deleteLabel={t('tasks.deleteTask')}
         />
       ),
     },
-  ], [modal]);
+  ], [modal, t, locale]);
 
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-text-primary">Tasks</h2>
-          <p className="mt-1 text-sm text-text-secondary">View and manage all tasks across projects</p>
+          <h2 className="text-xl font-semibold text-text-primary">{t('tasks.title')}</h2>
+          <p className="mt-1 text-sm text-text-secondary">{t('tasks.subtitle')}</p>
         </div>
         <Button onClick={modal.openCreate}>
           <span className="flex items-center gap-1.5">
             <PlusIcon />
-            Add Task
+            {t('tasks.addTask')}
           </span>
         </Button>
       </div>
@@ -140,59 +145,54 @@ export default function TasksPage() {
               <TasksIcon className="h-7 w-7 text-accent" />
             </div>
           }
-          title="No tasks yet"
-          description="Create your first task to get started."
-          action={<Button onClick={modal.openCreate}>+ Create Task</Button>}
+          title={t('tasks.noTasksYet')}
+          description={t('tasks.noTasksDesc')}
+          action={<Button onClick={modal.openCreate}>+ {t('tasks.createTask')}</Button>}
         />
       ) : (
         <>
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-3">
             <select value={filters.status} onChange={(e) => updateFilter('status', e.target.value)} className={FILTER_SELECT_CLASSES}>
-              <option value="all">All Statuses</option>
-              <option value="todo">To Do</option>
-              <option value="in_progress">In Progress</option>
-              <option value="in_review">In Review</option>
-              <option value="completed">Completed</option>
-              <option value="approved">Approved</option>
+              {statusOptions.map((opt) => (
+                <option key={opt.key} value={opt.key}>{opt.label}</option>
+              ))}
             </select>
 
             <select value={filters.priority} onChange={(e) => updateFilter('priority', e.target.value)} className={FILTER_SELECT_CLASSES}>
-              <option value="all">All Priorities</option>
-              <option value="urgent">Urgent</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
+              {priorityOptions.map((opt) => (
+                <option key={opt.key} value={opt.key}>{opt.label}</option>
+              ))}
             </select>
 
             <select value={filters.project} onChange={(e) => updateFilter('project', e.target.value)} className={FILTER_SELECT_CLASSES}>
-              <option value="all">All Projects</option>
+              <option value="all">{t('tasks.allProjects')}</option>
               {taskProjects.map(([id, name]) => (
                 <option key={id} value={id}>{name}</option>
               ))}
             </select>
 
             <select value={filters.assignee} onChange={(e) => updateFilter('assignee', e.target.value)} className={FILTER_SELECT_CLASSES}>
-              <option value="all">All Assignees</option>
+              <option value="all">{t('tasks.allAssignees')}</option>
               {assignees.map(([id, name]) => (
                 <option key={id} value={id}>{name}</option>
               ))}
             </select>
 
             <span className="text-sm text-text-muted ml-auto">
-              {filteredTasks.length} of {tasks.length} task{tasks.length !== 1 ? 's' : ''}
+              {t('common.countOf', { filtered: filteredTasks.length, total: tasks.length })}
             </span>
           </div>
 
           {/* Table */}
           {filteredTasks.length === 0 ? (
             <Card className="py-8 text-center">
-              <p className="text-sm text-text-secondary">No tasks match the selected filters.</p>
+              <p className="text-sm text-text-secondary">{t('tasks.noTasksMatch')}</p>
               <button
                 onClick={clearFilters}
                 className="mt-2 text-sm text-accent hover:underline cursor-pointer"
               >
-                Clear filters
+                {t('common.clearFilters')}
               </button>
             </Card>
           ) : (
@@ -229,7 +229,7 @@ export default function TasksPage() {
         <ConfirmDeleteModal
           isOpen={!!modal.deleting}
           onClose={modal.closeDelete}
-          title="Delete Task"
+          title={t('tasks.deleteTask')}
           itemName={modal.deleting.title}
           onConfirm={handleDelete}
         />
