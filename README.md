@@ -1,4 +1,4 @@
-# Project Management Dashboard
+# PM
 
 Aplicación fullstack de gestión de proyectos y tareas construida con arquitectura serverless en AWS. Permite a los equipos gestionar proyectos, asignar tareas, dar seguimiento al progreso y colaborar a través de un dashboard intuitivo.
 
